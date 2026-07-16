@@ -1,0 +1,30 @@
+{
+  "name": "demo2-nextgen-apps",
+  "version": "1.0.0",
+  "description": "Income-Expense Tracker - Serverless application with Express.js on Vercel",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "node api/index.js",
+    "build": "echo 'Static frontend, no build step required'",
+    "start": "node api/index.js",
+    "vercel-build": "echo 'Vercel build complete'"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "vercel": "^34.0.0"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": [
+    "income-expense",
+    "tracker",
+    "serverless",
+    "vercel",
+    "express"
+  ],
+  "license": "MIT"
+}

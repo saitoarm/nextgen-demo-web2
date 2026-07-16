@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>บันทึกรายรับ-รายจ่าย</title>
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      font-family: 'Sarabun', sans-serif;
+    }
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+    }
+    .card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    }
+    .card-header {
+      border-radius: 16px 16px 0 0 !important;
+      font-weight: 600;
+    }
+    .balance-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.4);
+    }
+    .balance-card .balance-label {
+      font-size: 0.9rem;
+      opacity: 0.85;
+      letter-spacing: 0.5px;
+    }
+    .balance-card .balance-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .balance-card .balance-sub {
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+    .stat-card {
+      border-radius: 16px;
+      padding: 1rem 1.25rem;
+    }
+    .stat-card .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    .stat-card .stat-label {
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+    .stat-card .stat-value {
+      font-size: 1.35rem;
+      font-weight: 600;
+    }
+    .income-color {
+      color: #198754;
+    }
+    .expense-color {
+      color: #dc3545;
+    }
+    .badge-income {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .badge-expense {
+      background-color: #fee2e2;
+      color: #991b1b;
+    }
+    .table th {
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #6c757d;
+    }
+    .table td {
+      vertical-align: middle;
+    }
+    .btn-action {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+    .filter-btn-group .btn {
+      border-radius: 20px;
+      padding: 0.3rem 1rem;
+      font-size: 0.85rem;
+    }
+    .filter-btn-group .btn.active {
+      font-weight: 600;
+    }
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+    }
+    .mode-badge {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 999;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .mode-badge:hover {
+      transform: scale(1.05);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #adb5bd;
+    }
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    .empty-state p {
+      font-size: 1.1rem;
+    }
+    @media (max-width: 768px) {
+      .balance-card .balance-amount {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Container -->
+  <div class="toast-container"></div>
+
+  <!-- Mode Badge -->
+  <div class="mode-badge bg-dark text-white" id="modeBadge" title="คลิกเพื่อสลับโหมด">
+    <i class="bi bi-cloud me-1"></i> <span id="modeText">API</span>
+  </div>
+
+  <div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 fw-bold mb-1">📊 บันทึกรายรับ-รายจ่าย</h1>
+        <p class="text-muted mb-0 small">จัดการรายรับและรายจ่ายของคุณอย่างง่ายดาย</p>
+      </div>
+      <button class="btn btn-outline-danger btn-sm" id="clearAllBtn" title="ลบข้อมูลทั้งหมด">
+        <i class="bi bi-trash3"></i> ล้างทั้งหมด
+      </button>
+    </div>
+
+    <!-- Balance Card -->
+    <div class="balance-card mb-4">
+      <div class="row align-items-center">
+        <div class="col-md-6 mb-3 mb-md-0">
+          <div class="balance-label">ยอดคงเหลือปัจจุบัน</div>
+          <div class="balance-amount" id="balanceAmount">0.00</div>
+          <div class="balance-sub mt-1">
+            <span class="me-3">
+              <i class="bi bi-arrow-up-circle-fill income-color"></i>
+              รายรับ <span id="totalIncome" class="fw-semibold">0</span>
+            </span>
+            <span>
+              <i class="bi bi-arrow-down-circle-fill expense-color"></i>
+              รายจ่าย <span id="totalExpense" class="fw-semibold">0</span>
+            </span>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="row g-2">
+            <div class="col-6">
+              <div class="stat-card bg-white bg-opacity-20" style="background: rgba(255,255,255,0.2);">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <div class="stat-icon bg-success bg-opacity-25 text-white">
+                    <i class="bi bi-graph-up-arrow"></i>
+                  </div>
+                  <div>
+                    <div class="stat-label text-white-50">รายการทั้งหมด</div>
+                    <div class="stat-value text-white" id="totalTransactions">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card bg-white bg-opacity-20" style="background: rgba(255,255,255,0.2);">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <div class="stat-icon bg-info bg-opacity-25 text-white">
+                    <i class="bi bi-calendar-check"></i>
+                  </div>
+                  <div>
+                    <div class="stat-label text-white-50">เดือนนี้</div>
+                    <div class="stat-value text-white" id="monthCount">0</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Form Column -->
+      <div class="col-lg-4">
+        <div class="card">
+          <div class="card-header bg-white py-3">
+            <h5 class="mb-0 fw-semibold">
+              <i class="bi bi-plus-circle me-1 text-primary"></i>
+              <span id="formTitle">เพิ่มรายการ</span>
+            </h5>
+          </div>
+          <div class="card-body">
+            <form id="transactionForm" novalidate>
+              <!-- Hidden ID for edit mode -->
+              <input type="hidden" id="editId" value="" />
+
+              <!-- Type -->
+              <div class="mb-3">
+                <label class="form-label fw-medium small">ประเภท</label>
+                <div class="d-flex gap-2">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="type" id="typeIncome" value="income" checked />
+                    <label class="form-check-label" for="typeIncome">
+                      <span class="badge badge-income"><i class="bi bi-arrow-up-circle"></i> รายรับ</span>
+                    </label>
+                  </div>
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="type" id="typeExpense" value="expense" />
+                    <label class="form-check-label" for="typeExpense">
+                      <span class="badge badge-expense"><i class="bi bi-arrow-down-circle"></i> รายจ่าย</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Category -->
+              <div class="mb-3">
+                <label for="category" class="form-label fw-medium small">หมวดหมู่</label>
+                <select class="form-select" id="category" required>
+                  <option value="">-- เลือกหมวดหมู่ --</option>
+                  <optgroup label="รายรับ">
+                    <option value="เงินเดือน">เงินเดือน</option>
+                    <option value="โบนัส">โบนัส</option>
+                    <option value="ฟรีแลนซ์">ฟรีแลนซ์</option>
+                    <option value="ดอกเบี้ย">ดอกเบี้ย</option>
+                    <option value="ของขวัญ">ของขวัญ</option>
+                    <option value="อื่นๆ (รายรับ)">อื่นๆ</option>
+                  </optgroup>
+                  <optgroup label="รายจ่าย">
+                    <option value="อาหาร">อาหาร</option>
+                    <option value="เดินทาง">เดินทาง</option>
+                    <option value="ที่อยู่อาศัย">ที่อยู่อาศัย</option>
+                    <option value="สาธารณูปโภค">สาธารณูปโภค</option>
+                    <option value="บันเทิง">บันเทิง</option>
+                    <option value="สุขภาพ">สุขภาพ</option>
+                    <option value="ช้อปปิ้ง">ช้อปปิ้ง</option>
+                    <option value="อื่นๆ (รายจ่าย)">อื่นๆ</option>
+                  </optgroup>
+                </select>
+                <div class="invalid-feedback">กรุณาเลือกหมวดหมู่</div>
+              </div>
+
+              <!-- Amount -->
+              <div class="mb-3">
+                <label for="amount" class="form-label fw-medium small">จำนวนเงิน</label>
+                <div class="input-group">
+                  <span class="input-group-text">฿</span>
+                  <input type="number" class="form-control" id="amount" placeholder="0.00" min="0.01" step="0.01" required />
+                  <div class="invalid-feedback">กรุณากรอกจำนวนเงินที่มากกว่า 0</div>
+                </div>
+              </div>
+
+              <!-- Date -->
+              <div class="mb-3">
+                <label for="date" class="form-label fw-medium small">วันที่</label>
+                <input type="date" class="form-control" id="date" required />
+                <div class="invalid-feedback">กรุณาเลือกวันที่</div>
+              </div>
+
+              <!-- Note -->
+              <div class="mb-3">
+                <label for="note" class="form-label fw-medium small">หมายเหตุ</label>
+                <textarea class="form-control" id="note" rows="2" placeholder="บันทึกเพิ่มเติม (ไม่บังคับ)"></textarea>
+              </div>
+
+              <!-- Buttons -->
+              <div class="d-grid gap-2">
+                <button type="submit" class="btn btn-primary" id="submitBtn">
+                  <i class="bi bi-check-lg"></i> <span id="submitBtnText">บันทึก</span>
+                </button>
+                <button type="button" class="btn btn-outline-secondary d-none" id="cancelEditBtn">
+                  <i class="bi bi-x-lg"></i> ยกเลิกแก้ไข
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Table Column -->
+      <div class="col-lg-8">
+        <!-- Filter -->
+        <div class="card mb-3">
+          <div class="card-body py-3">
+            <div class="row g-2 align-items-center">
+              <div class="col-md-6">
+                <div class="filter-btn-group btn-group" role="group">
+                  <button type="button" class="btn btn-outline-primary active" data-filter="all">ทั้งหมด</button>
+                  <button type="button" class="btn btn-outline-success" data-filter="income">รายรับ</button>
+                  <button type="button" class="btn btn-outline-danger" data-filter="expense">รายจ่าย</button>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-search"></i></span>
+                  <input type="text" class="form-control" id="searchInput" placeholder="ค้นหารายการ..." />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover mb-0" id="transactionTable">
+                <thead class="table-light">
+                  <tr>
+                    <th class="ps-3">วันที่</th>
+                    <th>ประเภท</th>
+                    <th>หมวดหมู่</th>
+                    <th>หมายเหตุ</th>
+                    <th class="text-end pe-3">จำนวนเงิน</th>
+                    <th class="text-center" style="width: 90px;">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody id="transactionBody">
+                  <!-- Rows rendered by JS -->
+                </tbody>
+              </table>
+            </div>
+            <div id="emptyState" class="empty-state">
+              <i class="bi bi-inbox"></i>
+              <p class="mb-0">ยังไม่มีรายการ</p>
+              <small>เริ่มต้นเพิ่มรายการแรกของคุณเลย!</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header border-0">
+          <h6 class="modal-title fw-semibold">ยืนยันการลบ</h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-0">
+          <p class="mb-0 small">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</p>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">ยกเลิก</button>
+          <button type="button" class="btn btn-danger btn-sm" id="confirmDeleteBtn">ลบ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
